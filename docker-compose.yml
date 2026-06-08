@@ -1,0 +1,74 @@
+services:
+  # 1. The Relational Vector Database
+  postgres-vector:
+    image: pgvector/pgvector:pg16
+    container_name: local-pg-vector
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=priva-admin
+      - POSTGRES_PASSWORD=Ldwpe30idn03@#
+      - POSTGRES_DB=priva-db
+    volumes:
+      # This ensures your vectors and user data survive if the container restarts
+      - /pg-data:/var/lib/postgresql/data
+      - /init-db/init.sql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U priva-admin -d priva-db",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # 2. The Multi-Modal Document Parser
+  unstructured-api:
+    image: downloads.unstructured.io/unstructured-io/unstructured-api:latest
+    container_name: local-unstructured-api
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+
+  # Spring Boot App
+  privadocai-app:
+    build:
+      context: ./privadocai
+      dockerfile: Dockerfile
+    volumes:
+      - ./documents:/app/documents
+
+    container_name: privadocai-app
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres-vector:
+        condition: service_healthy
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-vector:5432/priva-db
+      SPRING_DATASOURCE_USERNAME: priva-admin
+      SPRING_DATASOURCE_PASSWORD: "Ldwpe30idn03@#"
+
+      UNSTRUCTURED_API_URL: http://unstructured-api:8000
+      APP_STORAGE_UPLOAD_DIR: /app/documents
+      SPRING_AI_OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    restart: unless-stopped
+  privadocai-web:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: privadocai-web
+    ports:
+      - "4200:80"
+    depends_on:
+      - privadocai-app
+    restart: unless-stopped
+

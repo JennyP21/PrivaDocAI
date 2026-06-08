@@ -1,0 +1,39 @@
+# IDE / Editor folders
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Database storage
+pg-data/
+
+# User Uploaded Documents
+documents/*
+!documents/.gitkeep
+privadocai/documents/*
+!privadocai/documents/.gitkeep
+
+# Java / Gradle build files (privadocai)
+privadocai/.gradle/
+privadocai/build/
+privadocai/out/
+privadocai/bin/
+privadocai/.idea/
+privadocai/.vscode/
+
+# Node / Angular build files (client)
+client/node_modules/
+client/dist/
+client/.angular/
+client/.vscode/
+client/npm-debug.log*
+client/yarn-debug.log*
+client/yarn-error.log*
+
+# System / Log files
+*.log
+.DS_Store
+Thumbs.db
